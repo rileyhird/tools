@@ -8,6 +8,7 @@ Scripts and step-by-step procedures I reuse. Tools go in `tools/`, checklists an
 - [arch-hyprland-vm](tools/arch-hyprland-vm/README.md): scripts to run an Arch Linux + Hyprland test VM in QEMU.
 - [pdf-text-helpers](tools/pdf-text-helpers/README.md): show pages or search lines in text extracted from PDFs.
 - [web-page-fetch](tools/web-page-fetch/README.md): fetch page text with a real Chrome browser.
+- [photorec-sorter](tools/photorec-sorter/README.md): sort PhotoRec output into photos, documents and videos, keeping big files and dropping duplicates.
 
 ## Procedures
 
