@@ -4,10 +4,11 @@
 .DESCRIPTION
   Sorts by type (Photos, Documents, Videos, Audio, Archives), keeps only files above a
   size threshold, skips exact duplicates, and files photos by date taken (EXIF) when
-  available. Files are COPIED by default; nothing is deleted unless you use -Move.
+  available. By default this only CHECKS and writes nothing; add -Run to really copy.
+  Files are COPIED; nothing is deleted unless you also use -Move.
 .EXAMPLE
-  .\Sort-PhotoRec.ps1 -Source D:\recup -Dest E:\sorted -DryRun
   .\Sort-PhotoRec.ps1 -Source D:\recup -Dest E:\sorted
+  .\Sort-PhotoRec.ps1 -Source D:\recup -Dest E:\sorted -Run
 #>
 param(
   [Parameter(Mandatory)][string]$Source,
@@ -17,8 +18,10 @@ param(
   [int]$MinVideoMB = 5,
   [switch]$IncludeOther,
   [switch]$Move,
+  [switch]$Run,
   [switch]$DryRun
 )
+$DryRun = -not $Run
 $ErrorActionPreference = 'Stop'
 if (-not (Test-Path -LiteralPath $Source -PathType Container)) { throw "Not a folder: $Source" }
 
@@ -84,7 +87,7 @@ foreach ($f in ($files | Sort-Object Length -Descending)) {
 }
 
 if (-not $DryRun) { $rows | Export-Csv -NoTypeInformation -Path (Join-Path $Dest 'manifest.csv') }
-if ($DryRun) { Write-Host "`nDRY RUN - nothing written" }
+if ($DryRun) { Write-Host "`nCHECK ONLY - nothing was copied. Add -Run to do it for real." }
 Write-Host "`nKept:"
 foreach ($c in ($kept.Keys | Sort-Object)) { '  {0,-10} {1,7} files {2,9:N1} MB' -f $c, $kept[$c], ($keptBytes[$c]/1MB) | Write-Host }
 Write-Host "Skipped:"

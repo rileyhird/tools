@@ -4,11 +4,12 @@
 Sorts by file type (Photos, Documents, Videos, Audio, Archives, Other), keeps only
 files above a size threshold (small files are usually thumbnails/junk), skips exact
 duplicates, and for photos reads the date taken (EXIF) when Pillow is installed.
-Originals are COPIED by default; nothing is deleted unless you pass --move.
+By default this only CHECKS: it shows what it would keep and writes nothing.
+Add --run to really copy the files. Originals are COPIED; nothing is deleted unless you also pass --move.
 
 Usage:
   ./sort_photorec.py SRC_DIR DEST_DIR [--min-photo-kb 200] [--min-doc-kb 10]
-                     [--min-video-mb 5] [--move] [--dry-run]
+                     [--min-video-mb 5] [--move] [--run]
 """
 import argparse, hashlib, os, shutil, sys, csv
 from collections import defaultdict
@@ -54,8 +55,10 @@ def main():
     ap.add_argument("--min-video-mb", type=int, default=5)
     ap.add_argument("--include-other", action="store_true", help="also keep unrecognised file types")
     ap.add_argument("--move", action="store_true", help="move instead of copy")
-    ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--run", action="store_true", help="actually copy the files (default is check only)")
+    ap.add_argument("--dry-run", action="store_true", help=argparse.SUPPRESS)
     a = ap.parse_args()
+    a.dry_run = not a.run
 
     if not os.path.isdir(a.src):
         sys.exit(f"Not a folder: {a.src}")
@@ -119,7 +122,7 @@ def main():
         with open(os.path.join(a.dest, "manifest.csv"), "w", newline="") as f:
             w = csv.writer(f); w.writerow(["file", "category", "bytes", "sha1", "original"]); w.writerows(rows)
 
-    print("\n" + ("DRY RUN - nothing written\n" if a.dry_run else "") + "Kept:")
+    print("\n" + ("CHECK ONLY - nothing was copied. Add --run to do it for real.\n" if a.dry_run else "") + "Kept:")
     for c, (n, b) in sorted(stats.items()):
         print(f"  {c:<10} {n:>7} files  {b/1024/1024:>9.1f} MB")
     print("Skipped:")
