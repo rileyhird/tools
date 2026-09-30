@@ -17,7 +17,29 @@ python3 linux/sort_photorec.py /path/to/recup_dirs /path/to/sorted --run    # re
 Options: `--min-photo-kb`, `--min-doc-kb`, `--min-video-mb`, `--include-other`, `--move`, `--run`, `--first N`, `--from M`, `--to N`.
 Optional: Pillow (`pip install pillow`) for sorting photos by date taken.
 
-## Windows (PowerShell)
+## Windows: step by step (first time)
+
+1. Download `windows/Sort-PhotoRec.ps1` from this page (open the file, then use the download button) and keep it in your Downloads folder.
+2. Open the Downloads folder in File Explorer. Click the address bar at the top, type `powershell`, and press Enter. A blue PowerShell window opens in that folder.
+3. Find your **source** folder: the one that holds all the `recup_dir.1`, `recup_dir.2`, ... folders (not one of the numbered folders itself). Open it in File Explorer, click the address bar, and copy the path, for example `D:\`.
+4. Pick a **destination** folder for the sorted files, for example `C:\sorted`. It needs free space, because the script copies.
+5. **Check first** (this copies nothing). Put your real paths in; keep the quotes if the path has spaces:
+   ```
+   powershell -ExecutionPolicy Bypass -File .\Sort-PhotoRec.ps1 -Source "D:\" -Dest C:\sorted
+   ```
+6. If the summary looks right, run it for real by adding `-Run`:
+   ```
+   powershell -ExecutionPolicy Bypass -File .\Sort-PhotoRec.ps1 -Source "D:\" -Dest C:\sorted -Run
+   ```
+7. **Lots of recup_dir folders?** Do them in batches, using the same destination each time. The script remembers earlier batches and skips duplicates:
+   ```
+   ... -Source "D:\" -Dest C:\sorted -From 1 -To 250 -Run
+   ... -Source "D:\" -Dest C:\sorted -From 251 -To 500 -Run
+   ```
+8. It prints a progress line every 200 files. Big drives can take a long time. `Ctrl+C` stops it safely; your originals are never changed unless you use `-Move`.
+9. If Windows says the file is blocked: right-click the file, choose Properties, tick **Unblock**, and click OK.
+
+## Windows (PowerShell) - options
 
 ```
 .\windows\Sort-PhotoRec.ps1 -Source D:\recup -Dest E:\sorted        # check only (default)
