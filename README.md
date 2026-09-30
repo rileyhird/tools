@@ -1,6 +1,6 @@
 # Tools and Procedures
 
-Scripts and step-by-step procedures I reuse. Tools go in `tools/`, checklists and how-tos go in `procedures/`.
+Scripts I reuse. Each tool lives in its own folder under `tools/`.
 
 ## Tools
 
