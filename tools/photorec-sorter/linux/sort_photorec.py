@@ -11,7 +11,7 @@ Usage:
   ./sort_photorec.py SRC_DIR DEST_DIR [--min-photo-kb 200] [--min-doc-kb 10]
                      [--min-video-mb 5] [--first N | --from M --to N] [--move] [--run]
 """
-import argparse, hashlib, os, re, shutil, sys, csv
+import argparse, hashlib, os, re, shutil, sys, csv, time
 from collections import defaultdict
 from datetime import datetime
 
@@ -103,8 +103,12 @@ def main():
         try: by_size[os.path.getsize(p)].append(p)
         except OSError: skipped["unreadable"] += 1
 
+    total, done, t0 = len(files), 0, time.time()
     for size in sorted(by_size, reverse=True):      # biggest first: best copy wins
         for p in by_size[size]:
+            done += 1
+            if done % 200 == 0 or done == total:
+                print(f"  checked {done} of {total} files  ({(time.time()-t0)/60:.0f} min elapsed)", flush=True)
             ext = os.path.splitext(p)[1].lower()
             cat = category(ext)
             if cat == "Other" and not a.include_other:

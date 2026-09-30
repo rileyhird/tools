@@ -57,6 +57,7 @@ function Get-PhotoDate($path) {
   $null
 }
 
+Write-Host "Scanning $Source (this can take a few minutes on a big drive)..."
 $lo = if ($From -gt 0) { $From } else { 1 }
 $hi = if ($To -gt 0) { $To } else { $First }
 $ranged = ($From -gt 0) -or ($hi -gt 0)
@@ -82,7 +83,10 @@ if (Test-Path -LiteralPath $manifest) {   # earlier batch into the same folder: 
 function Skip($why) { $script:skipped[$why] = 1 + [int]$script:skipped[$why] }
 
 # Biggest first so the best copy of a duplicate wins
+$total = @($files).Count; $i = 0; $t0 = Get-Date
 foreach ($f in ($files | Sort-Object Length -Descending)) {
+  $i++
+  if ($i % 200 -eq 0 -or $i -eq $total) { Write-Host ("  checked {0} of {1} files  ({2:N0} min elapsed)" -f $i, $total, ((Get-Date) - $t0).TotalMinutes) }
   $ext = $f.Extension.ToLower()
   $cat = Get-Category $ext
   if ($cat -eq 'Other' -and -not $IncludeOther) { Skip 'other type'; continue }
