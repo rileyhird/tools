@@ -7,7 +7,4 @@ Scripts and step-by-step procedures I reuse. Tools go in `tools/`, checklists an
 - [drive-recovery](tools/drive-recovery/README.md): image a failing drive with ddrescue, then pull files off the image.
 - [photorec-sorter](tools/photorec-sorter/README.md): sort PhotoRec output into photos, documents and videos, keeping big files and dropping duplicates. Linux and Windows versions.
 
-## Procedures
-
-- [Arch black-screen boot checklist (Samsung AMD)](procedures/arch-samsung-amd-black-screen-checklist.md)
-- [Windows sees the drive but no access / no drive letter](procedures/windows-drive-shows-but-no-access.md): fixes for offline, RAW, no letter and access-denied drives after copying data. For Windows.
+Procedures and how-to checklists now live in the [tech-solutions](https://github.com/rileyhird/tech-solutions) repo.
