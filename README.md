@@ -1,4 +1,4 @@
-# Tools and Procedures
+# Tools
 
 Scripts I reuse. Each tool lives in its own folder under `tools/`.
 
