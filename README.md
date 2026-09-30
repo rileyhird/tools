@@ -12,3 +12,4 @@ Scripts and step-by-step procedures I reuse. Tools go in `tools/`, checklists an
 ## Procedures
 
 - [Arch black-screen boot checklist (Samsung AMD)](procedures/arch-samsung-amd-black-screen-checklist.md)
+- [Windows sees the drive but no access / no drive letter](procedures/windows-drive-shows-but-no-access.md): fixes for offline, RAW, no letter and access-denied drives after copying data. For Windows.
