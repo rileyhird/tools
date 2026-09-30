@@ -9,9 +9,9 @@ Add --run to really copy the files. Originals are COPIED; nothing is deleted unl
 
 Usage:
   ./sort_photorec.py SRC_DIR DEST_DIR [--min-photo-kb 200] [--min-doc-kb 10]
-                     [--min-video-mb 5] [--move] [--run]
+                     [--min-video-mb 5] [--first N | --from M --to N] [--move] [--run]
 """
-import argparse, hashlib, os, shutil, sys, csv
+import argparse, hashlib, os, re, shutil, sys, csv
 from collections import defaultdict
 from datetime import datetime
 
@@ -55,6 +55,9 @@ def main():
     ap.add_argument("--min-video-mb", type=int, default=5)
     ap.add_argument("--include-other", action="store_true", help="also keep unrecognised file types")
     ap.add_argument("--move", action="store_true", help="move instead of copy")
+    ap.add_argument("--first", type=int, metavar="N", help="only use recup_dir.1 to recup_dir.N")
+    ap.add_argument("--from", dest="from_dir", type=int, metavar="M", help="only use recup_dir.M and up")
+    ap.add_argument("--to", dest="to_dir", type=int, metavar="N", help="only use recup_dir.N and below")
     ap.add_argument("--run", action="store_true", help="actually copy the files (default is check only)")
     ap.add_argument("--dry-run", action="store_true", help=argparse.SUPPRESS)
     a = ap.parse_args()
@@ -65,13 +68,30 @@ def main():
     mins = {"Photos": a.min_photo_kb * 1024, "Documents": a.min_doc_kb * 1024,
             "Videos": a.min_video_mb * 1024 * 1024, "Audio": 100 * 1024, "Archives": 10 * 1024}
 
+    lo = a.from_dir if a.from_dir else 1
+    hi = a.to_dir if a.to_dir else a.first
+    ranged = bool(a.from_dir or hi)
     files = []
     for root, _, names in os.walk(a.src):
+        if ranged:
+            m = re.search(r"recup_dir\.(\d+)", os.path.relpath(root, a.src))
+            if not m or int(m.group(1)) < lo or (hi and int(m.group(1)) > hi):
+                continue
         for n in names:
             files.append(os.path.join(root, n))
+    if ranged:
+        print(f"Using recup_dir.{lo} to recup_dir.{hi if hi else 'end'}")
     print(f"Found {len(files)} files in {a.src}")
 
     seen = {}                       # sha1 -> kept path
+    old_rows = []
+    mpath = os.path.join(a.dest, "manifest.csv")
+    if os.path.exists(mpath):       # earlier batch into the same folder: don't keep duplicates of it
+        with open(mpath, newline="") as f:
+            r = csv.reader(f); next(r, None)
+            for row in r:
+                if len(row) >= 5: old_rows.append(row); seen[row[3]] = row[0]
+        print(f"Found manifest.csv from an earlier run ({len(old_rows)} files); skipping duplicates of those.")
     stats = defaultdict(lambda: [0, 0])   # cat -> [kept, bytes]
     skipped = defaultdict(int)
     rows = []
@@ -119,8 +139,8 @@ def main():
             rows.append([target, cat, size, digest, p])
 
     if not a.dry_run:
-        with open(os.path.join(a.dest, "manifest.csv"), "w", newline="") as f:
-            w = csv.writer(f); w.writerow(["file", "category", "bytes", "sha1", "original"]); w.writerows(rows)
+        with open(mpath, "w", newline="") as f:
+            w = csv.writer(f); w.writerow(["file", "category", "bytes", "sha1", "original"]); w.writerows(old_rows + rows)
 
     print("\n" + ("CHECK ONLY - nothing was copied. Add --run to do it for real.\n" if a.dry_run else "") + "Kept:")
     for c, (n, b) in sorted(stats.items()):

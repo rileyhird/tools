@@ -14,7 +14,7 @@ python3 linux/sort_photorec.py /path/to/recup_dirs /path/to/sorted          # ch
 python3 linux/sort_photorec.py /path/to/recup_dirs /path/to/sorted --run    # really copy
 ```
 
-Options: `--min-photo-kb`, `--min-doc-kb`, `--min-video-mb`, `--include-other`, `--move`, `--run`.
+Options: `--min-photo-kb`, `--min-doc-kb`, `--min-video-mb`, `--include-other`, `--move`, `--run`, `--first N`, `--from M`, `--to N`.
 Optional: Pillow (`pip install pillow`) for sorting photos by date taken.
 
 ## Windows (PowerShell)
@@ -24,9 +24,13 @@ Optional: Pillow (`pip install pillow`) for sorting photos by date taken.
 .\windows\Sort-PhotoRec.ps1 -Source D:\recup -Dest E:\sorted -Run   # really copy
 ```
 
-Options: `-MinPhotoKB`, `-MinDocKB`, `-MinVideoMB`, `-IncludeOther`, `-Move`, `-Run`.
+Options: `-MinPhotoKB`, `-MinDocKB`, `-MinVideoMB`, `-IncludeOther`, `-Move`, `-Run`, `-First N`, `-From M`, `-To N`.
 If Windows blocks the script, run it once with: `powershell -ExecutionPolicy Bypass -File .\windows\Sort-PhotoRec.ps1 -Source ... -Dest ...`
 Works in the built-in Windows PowerShell 5.1 and in PowerShell 7. Photo dates use the built-in .NET image library, so nothing to install.
+
+## Doing it in batches (lots of recup_dir folders)
+
+Use `-From` and `-To` (Linux: `--from` and `--to`) to handle a range of `recup_dir.N` folders at a time, e.g. `-From 1 -To 250`, then `-From 251 -To 500`, and so on. `-First 250` is shorthand for `-From 1 -To 250`. Keep the same destination folder for every batch: the script reads the `manifest.csv` from earlier batches and skips duplicates of files already kept, then adds the new files to the manifest.
 
 ## What both do
 

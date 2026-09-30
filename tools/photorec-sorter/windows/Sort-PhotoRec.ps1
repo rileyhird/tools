@@ -9,6 +9,8 @@
 .EXAMPLE
   .\Sort-PhotoRec.ps1 -Source D:\recup -Dest E:\sorted
   .\Sort-PhotoRec.ps1 -Source D:\recup -Dest E:\sorted -Run
+  .\Sort-PhotoRec.ps1 -Source D:\recup -Dest E:\sorted -From 1 -To 250 -Run
+  .\Sort-PhotoRec.ps1 -Source D:\recup -Dest E:\sorted -From 251 -To 500 -Run
 #>
 param(
   [Parameter(Mandatory)][string]$Source,
@@ -16,6 +18,9 @@ param(
   [int]$MinPhotoKB = 200,
   [int]$MinDocKB = 10,
   [int]$MinVideoMB = 5,
+  [int]$First = 0,
+  [int]$From = 0,
+  [int]$To = 0,
   [switch]$IncludeOther,
   [switch]$Move,
   [switch]$Run,
@@ -52,11 +57,28 @@ function Get-PhotoDate($path) {
   $null
 }
 
+$lo = if ($From -gt 0) { $From } else { 1 }
+$hi = if ($To -gt 0) { $To } else { $First }
+$ranged = ($From -gt 0) -or ($hi -gt 0)
 $files = Get-ChildItem -LiteralPath $Source -Recurse -File -ErrorAction SilentlyContinue
+if ($ranged) {
+  $files = @($files | Where-Object {
+    $rel = $_.FullName.Substring($Source.TrimEnd('\','/').Length)
+    if ($rel -match 'recup_dir\.(\d+)') { $n = [int]$Matches[1]; ($n -ge $lo) -and (($hi -le 0) -or ($n -le $hi)) } else { $false }
+  })
+  Write-Host ("Using recup_dir.{0} to recup_dir.{1}" -f $lo, $(if ($hi -gt 0) { $hi } else { 'end' }))
+}
 Write-Host "Found $($files.Count) files in $Source"
 if (-not $DryRun) { New-Item -ItemType Directory -Force -Path $Dest | Out-Null }
 
 $seen = @{}; $kept = @{}; $keptBytes = @{}; $skipped = @{}; $rows = @()
+$manifest = Join-Path $Dest 'manifest.csv'
+$oldRows = @()
+if (Test-Path -LiteralPath $manifest) {   # earlier batch into the same folder: skip duplicates of it
+  $oldRows = @(Import-Csv -LiteralPath $manifest)
+  foreach ($r in $oldRows) { $seen[$r.sha1] = $r.file }
+  Write-Host "Found manifest.csv from an earlier run ($($oldRows.Count) files); skipping duplicates of those."
+}
 function Skip($why) { $script:skipped[$why] = 1 + [int]$script:skipped[$why] }
 
 # Biggest first so the best copy of a duplicate wins
@@ -86,7 +108,7 @@ foreach ($f in ($files | Sort-Object Length -Descending)) {
   $rows += [pscustomobject]@{ file = $target; category = $cat; bytes = $f.Length; sha1 = $hash; original = $f.FullName }
 }
 
-if (-not $DryRun) { $rows | Export-Csv -NoTypeInformation -Path (Join-Path $Dest 'manifest.csv') }
+if (-not $DryRun) { @($oldRows) + @($rows) | Export-Csv -NoTypeInformation -Path $manifest }
 if ($DryRun) { Write-Host "`nCHECK ONLY - nothing was copied. Add -Run to do it for real." }
 Write-Host "`nKept:"
 foreach ($c in ($kept.Keys | Sort-Object)) { '  {0,-10} {1,7} files {2,9:N1} MB' -f $c, $kept[$c], ($keptBytes[$c]/1MB) | Write-Host }
