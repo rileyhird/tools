@@ -4,8 +4,8 @@
 #
 # What it does each time it runs:
 #   1. Skips quietly if the backup drive isn't plugged in / mounted.
-#   2. Skips if the last backup is newer than MIN_HOURS (default 20), so it
-#      runs about once a day even though the timer fires every hour.
+#   2. Skips if the last backup is newer than MIN_HOURS (default 11, so about every 12 hours), so it
+#      runs about twice a day even though the timer fires every hour.
 #   3. Backs up your home folder (minus cache, trash, games) and /etc.
 #   4. Cleans up old snapshots (keeps 7 daily, 4 weekly, 6 monthly).
 set -u
@@ -16,7 +16,7 @@ CONF="${RESTIC_AUTO_CONF:-/etc/restic-auto-backup/config}"
 . "$CONF"
 # Expected in the config: BACKUP_USER, BACKUP_MOUNT, REPO, PASSWORD_FILE
 RESTIC="${RESTIC_BIN:-restic}"
-MIN_HOURS="${MIN_HOURS:-20}"
+MIN_HOURS="${MIN_HOURS:-11}"
 HOME_DIR="$(getent passwd "$BACKUP_USER" | cut -d: -f6)"
 
 # systemd runs us with no HOME set, and restic needs somewhere for its cache.

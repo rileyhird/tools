@@ -84,7 +84,7 @@ systemctl daemon-reload
 systemctl enable --now restic-auto-backup.timer
 
 echo
-echo "All set. The computer will check every hour and back up about once a day,"
+echo "All set. The computer will check every hour and back up about every 12 hours,"
 echo "but only when the backup drive is plugged in."
 echo
 echo "Run a backup right now:      sudo systemctl start restic-auto-backup.service"

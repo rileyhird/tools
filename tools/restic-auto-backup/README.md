@@ -1,6 +1,6 @@
 # Automatic restic backups (Arch Linux)
 
-Sets up a systemd timer that backs up your home folder and `/etc` to an external drive with restic, by itself. It checks every hour, backs up about once a day, and quietly skips if the backup drive isn't plugged in.
+Sets up a systemd timer that backs up your home folder and `/etc` to an external drive with restic, by itself. It checks every hour, backs up about every 12 hours, and quietly skips if the backup drive isn't plugged in.
 
 This is the automatic version of the manual steps in the `arch-backup-restore-with-restic` guide in the [tech-solutions](https://github.com/rileyhird/tech-solutions) repo. If you already made a backup that way, the installer will reuse it.
 
