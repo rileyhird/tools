@@ -19,6 +19,11 @@ RESTIC="${RESTIC_BIN:-restic}"
 MIN_HOURS="${MIN_HOURS:-20}"
 HOME_DIR="$(getent passwd "$BACKUP_USER" | cut -d: -f6)"
 
+# systemd runs us with no HOME set, and restic needs somewhere for its cache.
+export HOME="${HOME:-/root}"
+export RESTIC_CACHE_DIR="${RESTIC_CACHE_DIR:-/var/cache/restic}"
+mkdir -p "$RESTIC_CACHE_DIR"
+
 export RESTIC_REPOSITORY="$REPO"
 export RESTIC_PASSWORD_FILE="$PASSWORD_FILE"
 
@@ -66,11 +71,14 @@ EXCLUDES=(--exclude "$HOME_DIR/.cache" --exclude "$HOME_DIR/.local/share/Trash"
 # Extra folders to skip can go in the config as: EXTRA_EXCLUDES=("/home/me/Videos")
 for e in "${EXTRA_EXCLUDES[@]:-}"; do [ -n "$e" ] && EXCLUDES+=(--exclude "$e"); done
 
-if ! $RESTIC backup "$HOME_DIR" /etc "${EXCLUDES[@]}" --tag auto; then
-  rc=$?
-  # exit code 3 = some files couldn't be read (e.g. changed while running). The backup still exists.
-  if [ "$rc" -ne 3 ]; then log "Backup FAILED (restic exit code $rc)."; exit "$rc"; fi
+$RESTIC backup "$HOME_DIR" /etc "${EXCLUDES[@]}" --tag auto
+rc=$?
+# exit code 3 = some files couldn't be read (e.g. changed while running). The backup still exists.
+if [ "$rc" -eq 3 ]; then
   log "Backup finished, but a few files couldn't be read."
+elif [ "$rc" -ne 0 ]; then
+  log "Backup FAILED (restic exit code $rc)."
+  exit "$rc"
 fi
 
 # 4. Tidy up old snapshots
