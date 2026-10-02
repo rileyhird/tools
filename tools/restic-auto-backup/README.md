@@ -2,7 +2,7 @@
 
 Sets up a systemd timer that backs up your home folder and `/etc` to an external drive with restic, by itself. It checks every hour, backs up about every 12 hours, and quietly skips if the backup drive isn't plugged in.
 
-This is the automatic version of the manual steps in the `arch-backup-restore-with-restic` guide in the [tech-solutions](https://github.com/rileyhird/tech-solutions) repo. If you already made a backup that way, the installer will reuse it.
+If you already have a restic backup on the drive, the installer will reuse it.
 
 ## Set it up
 
@@ -32,7 +32,17 @@ Old backups are cleaned up automatically: it keeps 7 daily, 4 weekly and 6 month
 | List your backups | `sudo restic -r /path/to/drive/backup --password-file /etc/restic-auto-backup/password snapshots` |
 | Turn it off | `sudo ./uninstall.sh` (your backups on the drive are not touched) |
 
-To get files back, use the restore commands in the tech-solutions guide, adding `--password-file /etc/restic-auto-backup/password` after the repo path so it doesn't ask for the password.
+## Getting files back
+
+Replace `/path/to/drive/backup` with your backup folder (for example `/run/media/riley/Backup/backup`). The password file means it won't ask you for the password.
+
+- Everything, into a safe temp folder: `sudo restic -r /path/to/drive/backup --password-file /etc/restic-auto-backup/password restore latest --target ~/restored`
+- One folder only: add `--include /home/<user>/Documents`
+- List what's in the latest backup: `sudo restic -r /path/to/drive/backup --password-file /etc/restic-auto-backup/password ls latest`
+- Browse it like a drive: `mkdir ~/mnt && sudo restic -r /path/to/drive/backup --password-file /etc/restic-auto-backup/password mount ~/mnt`, then look in `~/mnt/snapshots/latest` (Ctrl+C to stop)
+- Full restore onto a fresh install: `--target /`
+
+More in the [restic documentation](https://restic.readthedocs.io).
 
 ## Good to know
 
