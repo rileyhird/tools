@@ -22,6 +22,10 @@ To skip more folders, edit `/etc/restic-auto-backup/config` and fill in `EXTRA_E
 
 Old backups are cleaned up automatically: it keeps 7 daily, 4 weekly and 6 monthly snapshots.
 
+## Popups
+
+You get a desktop popup when a backup starts, when it finishes (so you know it's safe to unplug the drive), and if it fails. It stays quiet when there's nothing to do. This needs `notify-send` (package `libnotify`) and a notification app such as dunst or mako. To turn popups off, add the line `NOTIFY=0` to `/etc/restic-auto-backup/config`.
+
 ## Everyday commands
 
 | What | Command |

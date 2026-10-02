@@ -8,6 +8,8 @@
 #      runs about twice a day even though the timer fires every hour.
 #   3. Backs up your home folder (minus cache, trash, games) and /etc.
 #   4. Cleans up old snapshots (keeps 7 daily, 4 weekly, 6 monthly).
+#   5. Shows a desktop popup when a backup starts, finishes, or fails (needs notify-send, from libnotify).
+#      It stays quiet when it skips. Set NOTIFY=0 in the config to turn the popups off.
 set -u
 
 CONF="${RESTIC_AUTO_CONF:-/etc/restic-auto-backup/config}"
@@ -28,6 +30,17 @@ export RESTIC_REPOSITORY="$REPO"
 export RESTIC_PASSWORD_FILE="$PASSWORD_FILE"
 
 log() { echo "[restic-auto-backup] $*"; }
+
+# Desktop popup for the logged-in user. Never stops the backup if it can't be shown.
+# Usage: notify "Title" "Message" [normal|critical]
+notify() {
+  [ "${NOTIFY:-1}" = "1" ] || return 0
+  command -v notify-send >/dev/null 2>&1 || return 0
+  local uid; uid="$(id -u "$BACKUP_USER" 2>/dev/null)" || return 0
+  [ -S "/run/user/$uid/bus" ] || return 0   # nobody logged in
+  runuser -u "$BACKUP_USER" -- env "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$uid/bus" \
+    notify-send -a "Backup" -u "${3:-normal}" "$1" "$2" >/dev/null 2>&1 || true
+}
 
 # 1. Is the drive there?
 if ! mountpoint -q "$BACKUP_MOUNT"; then
@@ -61,6 +74,7 @@ fi
 
 # 3. Back up
 log "Starting backup..."
+notify "Backup started" "Please keep the backup drive plugged in until it says it's finished."
 if command -v pacman >/dev/null 2>&1; then
   pacman -Qqe > "$HOME_DIR/pkglist.txt" 2>/dev/null && chown "$BACKUP_USER" "$HOME_DIR/pkglist.txt"
 fi
@@ -78,6 +92,7 @@ if [ "$rc" -eq 3 ]; then
   log "Backup finished, but a few files couldn't be read."
 elif [ "$rc" -ne 0 ]; then
   log "Backup FAILED (restic exit code $rc)."
+  notify "Backup FAILED" "Something went wrong. Run: journalctl -u restic-auto-backup.service -e" critical
   exit "$rc"
 fi
 
@@ -87,3 +102,8 @@ $RESTIC forget --tag auto --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prun
   || log "Cleanup had a problem (the backup itself is fine)."
 
 log "Done."
+if [ "$rc" -eq 3 ]; then
+  notify "Backup finished" "Done, but a few files couldn't be read (that's usually fine). You can unplug the drive."
+else
+  notify "Backup finished" "All done. You can unplug the backup drive."
+fi
