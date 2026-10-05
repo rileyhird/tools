@@ -1,6 +1,6 @@
 # Tools
 
-Scripts I reuse. Each tool lives in its own folder under `tools/`.
+Scripts I reuse.
 
 ## Tools
 
