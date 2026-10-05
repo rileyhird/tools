@@ -30,4 +30,4 @@ Tries in order, asking before each step:
 ## Notes
 
 - Never write to the failing drive. Never run recovery tools on it directly if it clicks or throws read errors.
-- Tested on Ubuntu only (tool checks and install path). The imaging and extraction steps haven't been run against a real failing drive yet.
+  
